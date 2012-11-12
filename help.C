@@ -32,9 +32,17 @@ const Status RelCatalog::help(const string & relation)
   AttrDesc *attrs;
   int attrCnt;
 
+    /*
+     If relation.empty() is true (empty() is a method on the string class), print (to standard output) a list of all the relations in relcat (including how many attributes it has).
+     
+     Looks like this was done for us...
+     */
+    
   if (relation.empty()) return UT_Print(RELCATNAME);
 
-
+    /*
+    Otherwise, print all the tuples in attrcat that are relevant to relName. Implement this function in help.C
+     */
 
   return OK;
 }
