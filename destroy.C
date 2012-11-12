@@ -23,12 +23,20 @@ const Status RelCatalog::destroyRel(const string & relation)
 
   /*
    First remove all relevant schema information from both the relcat and attrcat relations. 
-   
   */
-    
-  /*Then destroy the heapfile corresponding to the relation (hint: again, there is a procedure to destroy heap file that we have seen in the last project stage; you need to give it a string that is the relation name). Implement this function in destroy.C
+    status = relCat->removeInfo(relation);
+    AttrDesc record;
+    string attrName;
+    status = attrCat->getInfo(relation, attrName, record);
+    status = attrCat->removeInfo(relation, attrName);
+  
+  /*Then destroy the heapfile corresponding to the relation (hint: again, 
+   * there is a procedure to destroy heap file that we have seen in the 
+   * last project stage; you need to give it a string that is the relation name).
+   * Implement this function in destroy.C
   */
-
+  
+  status = destroyHeapFile(relation);
 
 }
 

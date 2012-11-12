@@ -19,19 +19,26 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
 
   /*
   Open a scan on the relcat relation by invoking the startScan() method on itself.
-   */
-  
-  /*You want to look for the tuple whose first attribute matches the string relName. 
+  You want to look for the tuple whose first attribute matches the string relName. 
   */
-    
+  
+  HeapFileScan* hfs = new HeapFileScan(relation, status);
+  status = hfs->startScan(0, 0, STRING, "relName", EQ);
+
   /*
    Then call scanNext() and getRecord() to get the desired tuple. 
   */
-    
+
+  status = hfs->scanNext(rid);
+  status = hfs->getRecord(rec);
+  status = hfs->endScan();
   /*
    Finally, you need to memcpy() the tuple out of the buffer pool into the return parameter record.
   */
 
+  memcpy(&record, &rec, sizeof(record) );
+
+  return status;
 
 }
 
@@ -39,25 +46,29 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
 const Status RelCatalog::addInfo(RelDesc & record)
 {
   RID rid;
-  InsertFileScan*  ifs;
   Status status;
+  InsertFileScan*  ifs = new InsertFileScan(record.relName, status);
 
   /*
    Adds the relation descriptor contained in record to the relcat relation RelDesc represents both the in-memory format and on-disk format of a tuple in relcat. 
    */
-    
+
   /*
    First, create an InsertFileScan object on the relation catalog table. 
   */
-    
+  
   /*
    Next, create a record
   */
-    
+
+  Record rec;
+  rec.data = record.relName;
+  rec.length = record.attrCnt;
+
   /*
    and then insert it into the relation catalog table using the method insertRecord of InsertFileScan.
   */
-
+  status = ifs->insertRecord(rec, rid);
 
 }
 
@@ -72,10 +83,17 @@ const Status RelCatalog::removeInfo(const string & relation)
   /*
    Remove the tuple corresponding to relName from relcat. Once again, you have to start a filter scan on relcat to locate the rid of the desired tuple.
   */
-    
+ 
+  hfs = new HeapFileScan(relation, status);
+  status = hfs->startScan(0, 0, STRING, "relName", EQ);
+
   /*
     Then you can call deleteRecord() to remove it.
   */
+
+  status = hfs->scanNext(rid);
+  status = hfs->deleteRecord();
+  status = hfs->endScan();
     
 }
 
@@ -106,9 +124,22 @@ const Status AttrCatalog::getInfo(const string & relation,
   if (relation.empty() || attrName.empty()) return BADCATPARM;
 
   /*
-   Returns the attribute descriptor record for attribute attrName in relation relName. Uses a scan over the underlying heapfile to get all tuples for relation and check each tuple to find whether it corresponds to attrName. (Or maybe do it the other way around !) This has to be done this way because a predicated HeapFileScan does not allow conjuncted predicates. Note that the tuples in attrcat are of type AttrDesc (structure given above).
+   Returns the attribute descriptor record for attribute attrName in relation relName. 
+   Uses a scan over the underlying heapfile to get all tuples for relation and check each tuple to find whether
+   it corresponds to attrName. (Or maybe do it the other way around !) This has to be done this way because
+   a predicated HeapFileScan does not allow conjuncted predicates. Note that the tuples in attrcat are of 
+   type AttrDesc (structure given above).
   */
 
+  hfs = new HeapFileScan(relation, status);
+  status = hfs->startScan(0, 0, STRING, "attrName", EQ);
+
+
+  status = hfs->scanNext(rid);
+  status = hfs->getRecord(rec);
+  status = hfs->endScan();
+
+  memcpy(&record, &rec, sizeof(record) );
 
 }
 
@@ -163,7 +194,6 @@ const Status AttrCatalog::getRelInfo(const string & relation,
 
 
 }
-
 
 AttrCatalog::~AttrCatalog()
 {
