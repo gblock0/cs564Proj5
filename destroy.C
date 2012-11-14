@@ -25,10 +25,16 @@ const Status RelCatalog::destroyRel(const string & relation)
    First remove all relevant schema information from both the relcat and attrcat relations. 
   */
     status = relCat->removeInfo(relation);
+    if(status != OK) return status;
+
     AttrDesc record;
     string attrName;
     status = attrCat->getInfo(relation, attrName, record);
+    if(status != OK) return status;
+
     status = attrCat->removeInfo(relation, attrName);
+    if(status != OK) return status;
+
   
   /*Then destroy the heapfile corresponding to the relation (hint: again, 
    * there is a procedure to destroy heap file that we have seen in the 
@@ -36,7 +42,10 @@ const Status RelCatalog::destroyRel(const string & relation)
    * Implement this function in destroy.C
   */
   
-  status = destroyHeapFile(relation);
+    status = destroyHeapFile(relation);
+    if(status != OK) return status;
+
+  return status;
 
 }
 
@@ -63,11 +72,20 @@ const Status AttrCatalog::dropRelation(const string & relation)
   /*
   Deletes all tuples in attrcat for the relation relName. 
 
-  Again use a scan to find all tuples whose relName attribute equals relation and then call deleteRecord() on each one. Implement this function in destroy.C
+  Again use a scan to find all tuples whose relName attribute equals relation and then call deleteRecord() on each one.
+  Implement this function in destroy.C
   */
 
+  status = getRelInfo(relation, attrCnt, attrs);
+  if(status != OK) return status;
+
+  for(i = 0; i < attrCnt; i++){
+  }
+  
 
 
+
+  return status;
 }
 
 

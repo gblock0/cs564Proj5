@@ -32,9 +32,9 @@ const Status UT_Load(const string & relation, const string & fileName)
   if ((fd = open(fileName.c_str(), O_RDONLY, 0)) < 0)
     return UNIXERR;
 
+/* ****************************************************** */
   // get relation data
-
-
+  
 
 
   // start insertFileScan on relation
@@ -46,6 +46,7 @@ const Status UT_Load(const string & relation, const string & fileName)
 
 
 
+/* ****************************************************** */
   // allocate buffer to hold record read from unix file
   char *record;
   if (!(record = new char [width])) return INSUFMEM;

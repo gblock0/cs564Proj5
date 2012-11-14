@@ -23,15 +23,29 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   */
   
   HeapFileScan* hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, "relName", EQ);
+  status = hfs->startScan(0, 0, STRING, relation.c_str(), EQ);
+  if(status != OK){
+    return status;
+  }
 
   /*
    Then call scanNext() and getRecord() to get the desired tuple. 
   */
 
   status = hfs->scanNext(rid);
+  if(status != OK){
+    return status;
+  }
+
   status = hfs->getRecord(rec);
+  if(status != OK){
+    return status;
+  }
   status = hfs->endScan();
+  if(status != OK){
+    return status;
+  }
+
   /*
    Finally, you need to memcpy() the tuple out of the buffer pool into the return parameter record.
   */
@@ -50,7 +64,8 @@ const Status RelCatalog::addInfo(RelDesc & record)
   InsertFileScan*  ifs = new InsertFileScan(record.relName, status);
 
   /*
-   Adds the relation descriptor contained in record to the relcat relation RelDesc represents both the in-memory format and on-disk format of a tuple in relcat. 
+   Adds the relation descriptor contained in record to the relcat relation RelDesc represents both the in-memory 
+   format and on-disk format of a tuple in relcat. 
    */
 
   /*
@@ -69,6 +84,11 @@ const Status RelCatalog::addInfo(RelDesc & record)
    and then insert it into the relation catalog table using the method insertRecord of InsertFileScan.
   */
   status = ifs->insertRecord(rec, rid);
+  if(status != OK){
+    return status;
+  }
+
+  return status;
 
 }
 
@@ -85,16 +105,28 @@ const Status RelCatalog::removeInfo(const string & relation)
   */
  
   hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, "relName", EQ);
+  status = hfs->startScan(0, 0, STRING, relation.c_str(), EQ);
+  if(status != OK){
+    return status;
+  }
 
   /*
     Then you can call deleteRecord() to remove it.
   */
 
   status = hfs->scanNext(rid);
+  if(status != OK){
+    return status;
+  }
   status = hfs->deleteRecord();
+  if(status != OK){
+    return status;
+  }
   status = hfs->endScan();
-    
+  if(status != OK){
+    return status;
+  }
+  return status;
 }
 
 
@@ -132,14 +164,30 @@ const Status AttrCatalog::getInfo(const string & relation,
   */
 
   hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, "attrName", EQ);
+  status = hfs->startScan(0, 0, STRING, attrName.c_str(), EQ);
+  if(status != OK){
+    return status;
+  }
 
 
   status = hfs->scanNext(rid);
+  if(status != OK){
+    return status;
+  }
+
   status = hfs->getRecord(rec);
+  if(status != OK){
+    return status;
+  }
+
   status = hfs->endScan();
+  if(status != OK){
+    return status;
+  }
 
   memcpy(&record, &rec, sizeof(record) );
+
+  return status;
 
 }
 
@@ -154,7 +202,17 @@ const Status AttrCatalog::addInfo(AttrDesc & record)
   /*
    Adds a tuple (corresponding to an attribute of a relation) to the attrcat relation.
   */
+  
+  Record rec;
+  rec.data = record.relName;
+  rec.length = record.attrLen;
 
+  status = ifs->insertRecord(rec, rid);
+  if(status != OK){
+    return status;
+  }
+
+  return status;
 
 }
 
@@ -174,6 +232,29 @@ const Status AttrCatalog::removeInfo(const string & relation,
    Removes the tuple from attrcat that corresponds to attribute attrName of relation.
   */
 
+  hfs = new HeapFileScan(relation, status);
+  status = hfs->startScan(0, 0, STRING, attrName.c_str(), EQ);
+  if(status != OK){
+    return status;
+  }
+
+
+  status = hfs->scanNext(rid);
+  if(status != OK){
+    return status;
+  }
+
+  status = hfs->deleteRecord();
+  if(status != OK){
+    return status;
+  }
+
+  status = hfs->endScan();
+  if(status != OK){
+    return status;
+  }
+
+  return status;
 }
 
 
@@ -189,9 +270,30 @@ const Status AttrCatalog::getRelInfo(const string & relation,
   if (relation.empty()) return BADCATPARM;
 
   /*
-   While getInfo() above returns the description of a single attribute, this method returns (by reference) descriptors for all attributes of the relation via attr, an array of AttrDesc structures,  and the count of the number of attributes in attrCnt. The attrs array is allocated by this function, but it should be deallocated by the caller.
+   While getInfo() above returns the description of a single attribute, this method
+   returns (by reference) descriptors for all attributes of the relation via attrs,
+   an array of AttrDesc structures,  and the count of the number of attributes in attrCnt.
+   The attrs array is allocated by this function, but it should be deallocated by the caller.
   */
 
+  hfs = new HeapFileScan(relation, status);
+  status = hfs->startScan(0, 0, STRING, attrs->attrName, EQ);
+  if(status != OK) return status;
+
+  attrCnt = 0;
+  while(status == OK){
+    status = hfs->scanNext(rid);
+    if(status != OK) return status;
+
+    status = hfs->getRecord(rec);
+    if(status != OK) return status;
+    
+    
+
+    attrCnt++;
+  }
+  
+  return status;
 
 }
 
