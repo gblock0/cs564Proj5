@@ -21,9 +21,9 @@ const Status RelCatalog::createRel(const string & relation,
   /*
    First make sure that a relation with the same name doesn't already exist (by using the getInfo() function described below). 
   */
-    
+
   status = relCat->getInfo(relation, rd);
-    
+
   /*Next add a tuple to the relcat relation. Do this by filling in an instance of the RelDesc structure above and then invoking the RelCatalog::addInfo() method. 
   */
   //* *********************NEED TO CHANGE STATUS********** */
@@ -42,8 +42,6 @@ const Status RelCatalog::createRel(const string & relation,
         status = attrCat->addInfo(ad);
 
       }
-
-
     } 
   /*
    Finally, create a HeapFile instance to hold tuples of the relation 

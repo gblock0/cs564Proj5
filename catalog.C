@@ -22,25 +22,44 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   You want to look for the tuple whose first attribute matches the string relName. 
   */
   
-  HeapFileScan* hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, relation.c_str(), EQ);
-  if(status != OK){
-    return status;
-  }
+  /*
+   int Ioffset = (char*)&rec1.i - (char*)&rec1;
+   int Ivalue = num/2;
+   int Foffset = (char*)&rec1.f - (char*)&rec1;
+   float Fvalue = 0;
+   
+   scan1 = new HeapFileScan("dummy.03", status);
+   if (status != OK) error.print(status);
+   status = scan1->startScan(Ioffset, sizeof(int), INTEGER,
+   (char*)&Ivalue, LT);
+   if (status != OK) error.print(status);
+   
+   scan2 = new HeapFileScan("dummy.03", status);
+   if (status != OK) error.print(status);
+   status = scan2->startScan(Foffset, sizeof(float), FLOAT,
+  */
+    
+  //we want to scan the relcat
+  HeapFileScan* hfs = new HeapFileScan(RELCATNAME, status);
+  if(status != OK) return status;
+  
+  //search for the string matching relation
+  int offset = (char*)&record.relName - (char*)&record;
+  status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
+  if(status != OK) return status;
 
   /*
    Then call scanNext() and getRecord() to get the desired tuple. 
   */
 
   status = hfs->scanNext(rid);
-  if(status != OK){
-    return status;
-  }
+  if(status != OK) return status;
 
   status = hfs->getRecord(rec);
   if(status != OK){
     return status;
   }
+
   status = hfs->endScan();
   if(status != OK){
     return status;
@@ -50,48 +69,44 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
    Finally, you need to memcpy() the tuple out of the buffer pool into the return parameter record.
   */
 
-  memcpy(&record, &rec, sizeof(record) );
+  memcpy(&record, &rec, sizeof(record));
 
   return status;
 
 }
 
-
+/*
+ Adds the relation descriptor contained in record to the relcat relation RelDesc represents both the in-memory 
+ format and on-disk format of a tuple in relcat. 
+ */
 const Status RelCatalog::addInfo(RelDesc & record)
 {
   RID rid;
   Status status;
-  InsertFileScan*  ifs = new InsertFileScan(record.relName, status);
+  InsertFileScan*  ifs;
 
-  /*
-   Adds the relation descriptor contained in record to the relcat relation RelDesc represents both the in-memory 
-   format and on-disk format of a tuple in relcat. 
-   */
+  //First, create an InsertFileScan object on the relation catalog table. 
+  ifs = new InsertFileScan(RELCATNAME, status);
+  if(status != OK) return status;
 
-  /*
-   First, create an InsertFileScan object on the relation catalog table. 
-  */
-  
-  /*
-   Next, create a record
-  */
-
+  //Next, create a record
+  //do we have to do a mem copy here? I dont think so...
+  //added this from the hints in the Piazza post
   Record rec;
-  rec.data = record.relName;
-  rec.length = record.attrCnt;
+  rec.data = &record;
+  rec.length = sizeof(RelDesc);
 
   /*
    and then insert it into the relation catalog table using the method insertRecord of InsertFileScan.
   */
   status = ifs->insertRecord(rec, rid);
-  if(status != OK){
-    return status;
-  }
+  if(status != OK) return status;
 
   return status;
-
 }
 
+/*
+ Remove the tuple corresponding to relName from relcat. */
 const Status RelCatalog::removeInfo(const string & relation)
 {
   Status status;
@@ -99,33 +114,27 @@ const Status RelCatalog::removeInfo(const string & relation)
   HeapFileScan*  hfs;
 
   if (relation.empty()) return BADCATPARM;
-
-  /*
-   Remove the tuple corresponding to relName from relcat. Once again, you have to start a filter scan on relcat to locate the rid of the desired tuple.
-  */
  
-  hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, relation.c_str(), EQ);
-  if(status != OK){
-    return status;
-  }
+  //we want to scan the relcat
+  hfs = new HeapFileScan(RELCATNAME, status);
+  if(status != OK) return status;
+    
+  //search for the string matching relation
+  RelDesc relDesc;
+  int offset = (char*)&relDesc.relName - (char*)&relDesc;
+  status = hfs->startScan(offset,sizeof(relDesc.relName),STRING,relation.c_str(),EQ);
+  if(status != OK) return status;
 
-  /*
-    Then you can call deleteRecord() to remove it.
-  */
-
+  //find the record
   status = hfs->scanNext(rid);
   if(status != OK){
     return status;
   }
+  
+  //delete the record
   status = hfs->deleteRecord();
-  if(status != OK){
-    return status;
-  }
-  status = hfs->endScan();
-  if(status != OK){
-    return status;
-  }
+  if(status != OK) return status;
+  
   return status;
 }
 
@@ -164,7 +173,8 @@ const Status AttrCatalog::getInfo(const string & relation,
   */
 
   hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, attrName.c_str(), EQ);
+  
+  //status = this->startScan(0, 0, STRING, attrName.c_str(), EQ);
   if(status != OK){
     return status;
   }
@@ -275,12 +285,18 @@ const Status AttrCatalog::getRelInfo(const string & relation,
    an array of AttrDesc structures,  and the count of the number of attributes in attrCnt.
    The attrs array is allocated by this function, but it should be deallocated by the caller.
   */
+    
+  //find out how long the array should be and create it
+  RelDesc relDesc;
+  relCat->getInfo(relation, relDesc);
+  attrCnt = relDesc.attrCnt;
+  attrs = new AttrDesc[attrCnt];
 
   hfs = new HeapFileScan(relation, status);
-  status = hfs->startScan(0, 0, STRING, attrs->attrName, EQ);
+  //we may have to do relation.legnth + 1 instead of sizeof(attrs.relName)
+  status = hfs->startScan(0,MAXNAME, STRING, relation.c_str(), EQ);
   if(status != OK) return status;
 
-  attrCnt = 0;
   while(status == OK){
     status = hfs->scanNext(rid);
     if(status != OK) return status;
@@ -288,9 +304,6 @@ const Status AttrCatalog::getRelInfo(const string & relation,
     status = hfs->getRecord(rec);
     if(status != OK) return status;
     
-    
-
-    attrCnt++;
   }
   
   return status;
