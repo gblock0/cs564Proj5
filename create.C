@@ -8,47 +8,44 @@ const Status RelCatalog::createRel(const string & relation,
   Status status;
   RelDesc rd;
   AttrDesc ad;
+  int offset;
 
   if (relation.empty() || attrCnt < 1)
     return BADCATPARM;
 
   if (relation.length() >= sizeof rd.relName)
     return NAMETOOLONG;
-
     
-    
-
-  /*
-   First make sure that a relation with the same name doesn't already exist (by using the getInfo() function described below). 
-  */
-
+  //check to see if relation already exisits
+    //if it does what should we return???
   status = relCat->getInfo(relation, rd);
-
-  /*Next add a tuple to the relcat relation. Do this by filling in an instance of the RelDesc structure above and then invoking the RelCatalog::addInfo() method. 
-  */
-  //* *********************NEED TO CHANGE STATUS********** */
-    if(status != OK){
-      status = relCat->addInfo(rd);
-      for(int i = 0; i < attrCnt; i++){
-        /*Third, for each of the attrCnt attributes, invoke the AttrCatalog::addInfo() method of 
-         * the attribute catalog table (remember that this table is referred to by the global variable attrCat), 
-         * passing the appropriate attribute information from the attrList[] array as an instance of the AttrDesc 
-         * structure (see below). 
-         */
-        strcpy(ad.relName, attrList[i].relName);
-        strcpy(ad.attrName, attrList[i].attrName);
-        ad.attrType = attrList[i].attrType;
-        ad.attrLen = attrList[i].attrLen;
-        status = attrCat->addInfo(ad);
-
-      }
+  if(status == OK) return (status = BADCATPARM);
+  
+  //initializing the RelDesc and adding it to relCat
+  memcpy(rd.relName, relation.c_str(),sizeof(rd.relName));
+  rd.attrCnt = attrCnt;
+  status = relCat->addInfo(rd);
+  
+  offset = 0;
+    
+  //for all in array copy the attr data into the AttrDesc struct, and add to attrCat
+  for(int i = 0; i < attrCnt; i++){
+      strcpy(ad.relName, attrList[i].relName);
+      strcpy(ad.attrName, attrList[i].attrName);
+      ad.attrType = attrList[i].attrType;
+      ad.attrLen = attrList[i].attrLen;
+      ad.attrOffset = offset;
+      status = attrCat->addInfo(ad);
+      if(status != OK) return status;
+      
+      //add offset for next attribute
+      offset = (offset + attrList[i].attrLen);
     } 
-  /*
-   Finally, create a HeapFile instance to hold tuples of the relation 
-   (hint: there is a procedure to do this which we have seen in the last project stage; you need to
-   give it a string that is the relation name). Implement this function in create.C
-   */
+
+  //create the heapFile instance to hold tuples for this relation 
   status = createHeapFile(relation);
+  
+  return status;
 
 }
 

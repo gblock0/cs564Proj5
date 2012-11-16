@@ -293,7 +293,7 @@ hfs = new HeapFileScan(ATTRCATNAME, status);
   //scan until it has reached EOF or found all the attribute descriptions
   //each match add it to the array
   int i = 0;
-  while(((status = hfs->scanNext(rid)) != FILEEOF) || i < attrCnt)
+  while(((status = hfs->scanNext(rid)) != FILEEOF) || (i < attrCnt) )
   {
     if(status != OK) return status;
  
@@ -307,7 +307,6 @@ hfs = new HeapFileScan(ATTRCATNAME, status);
   }
     
   return status;
-
 }
 
 AttrCatalog::~AttrCatalog()
