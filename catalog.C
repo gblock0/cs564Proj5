@@ -16,12 +16,6 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   Status status;
   Record rec;
   RID rid;
-
-  /*
-  Open a scan on the relcat relation by invoking the startScan() method on itself.
-  You want to look for the tuple whose first attribute matches the string relName
-  */
-  
     
   //we want to scan the relcat
   HeapFileScan* hfs = new HeapFileScan(RELCATNAME, status);
@@ -32,10 +26,7 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
   if(status != OK) return status;
 
-  /*
-   Then call scanNext() and getRecord() to get the desired tuple. 
-  */
-
+  //Scan the record and get the desired tuple. 
   status = hfs->scanNext(rid);
   if(status != OK) return status;
 
@@ -43,13 +34,12 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   if(status != OK){
     return status;
   }
-
-  /*
-   Finally, you need to memcpy() the tuple out of the buffer pool into the return parameter record.
-  */
-
+  
+  //copy the tuple out of the buffer pool into the return parameter record.
   memcpy(&record, &rec, sizeof(record));
 
+  delete hfs;
+    
   return status;
 
 }
@@ -78,7 +68,9 @@ const Status RelCatalog::addInfo(RelDesc & record)
   */
   status = ifs->insertRecord(rec, rid);
   if(status != OK) return status;
-    
+
+  delete ifs;
+
   return status;
 }
 
@@ -113,6 +105,8 @@ const Status RelCatalog::removeInfo(const string & relation)
   status = hfs->deleteRecord();
   if(status != OK) return status;
   
+  delete hfs;
+    
   return status;
 }
 
@@ -176,9 +170,11 @@ const Status AttrCatalog::getInfo(const string & relation,
       //check to see if the record has a matching attrName too
       if(memcmp(&record.attrName,attrName.c_str(),sizeof(record.attrName))){
           //ahh! we found a match!
+          delete hfs;
           return status;
       }
   }
+  
 }
 
 /*
@@ -202,6 +198,8 @@ const Status AttrCatalog::addInfo(AttrDesc & record)
     //insert it into relCat table using the method
     status = ifs->insertRecord(rec, rid);
     if(status != OK) return status;
+    
+    delete ifs;
     
     return status;
 }
@@ -230,13 +228,13 @@ const Status AttrCatalog::removeInfo(const string & relation,
     
     //find the record
     status = hfs->scanNext(rid);
-    if(status != OK){
-        return status;
-    }
+    if(status != OK) return status;
     
     //delete the record
     status = hfs->deleteRecord();
     if(status != OK) return status;
+    
+    delete hfs;
     
     return status;
 }
@@ -265,15 +263,14 @@ const Status AttrCatalog::getRelInfo(const string & relation,
   attrCnt = relDesc.attrCnt;
   attrs = new AttrDesc[attrCnt];
     
- //we want to scan the attrCat
-hfs = new HeapFileScan(ATTRCATNAME, status);
- if(status != OK) return status;
+  //we want to scan the attrCat
+  hfs = new HeapFileScan(ATTRCATNAME, status);
+  if(status != OK) return status;
  
- //search for the string matching relation
- int offset = (char*)&attrs[0].relName - (char*)&attrs[0];
- status = hfs->startScan(offset,sizeof(attrs[0].relName),STRING,relation.c_str(),EQ);
- if(status != OK) return status;
- 
+  //search for the string matching relation
+  int offset = (char*)&attrs[0].relName - (char*)&attrs[0];
+  status = hfs->startScan(offset,sizeof(attrs[0].relName),STRING,relation.c_str(),EQ);
+  if(status != OK) return status;
 
   //scan until it has reached EOF or found all the attribute descriptions
   //each match add it to the array
@@ -290,6 +287,8 @@ hfs = new HeapFileScan(ATTRCATNAME, status);
     i++;
     
   }
+    
+  delete hfs;
     
   return status;
 }
