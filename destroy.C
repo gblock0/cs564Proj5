@@ -27,15 +27,25 @@ const Status RelCatalog::destroyRel(const string & relation)
     status = relCat->removeInfo(relation);
     if(status != OK) return status;
 
+    status = attrCat->dropRelation(relation);
+    if(status != OK) return status;
+
+
+    //I think use dropRelation to take away all the tuples of the relation from attrCat
+    /*
     AttrDesc record;
     string attrName;
     status = attrCat->getInfo(relation, attrName, record);
+    cout << "Here 1" << endl;
     if(status != OK) return status;
+    cout << "Here 2" << endl;
 
     status = attrCat->removeInfo(relation, attrName);
-    if(status != OK) return status;
+    cout << "Here 3" << endl;
 
-  
+    if(status != OK) return status;
+    cout << "Here 4" << endl;
+ */ 
   /*Then destroy the heapfile corresponding to the relation (hint: again, 
    * there is a procedure to destroy heap file that we have seen in the 
    * last project stage; you need to give it a string that is the relation name).
