@@ -19,25 +19,9 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
 
   /*
   Open a scan on the relcat relation by invoking the startScan() method on itself.
-  You want to look for the tuple whose first attribute matches the string relName. 
+  You want to look for the tuple whose first attribute matches the string relName
   */
   
-  /*
-   int Ioffset = (char*)&rec1.i - (char*)&rec1;
-   int Ivalue = num/2;
-   int Foffset = (char*)&rec1.f - (char*)&rec1;
-   float Fvalue = 0;
-   
-   scan1 = new HeapFileScan("dummy.03", status);
-   if (status != OK) error.print(status);
-   status = scan1->startScan(Ioffset, sizeof(int), INTEGER,
-   (char*)&Ivalue, LT);
-   if (status != OK) error.print(status);
-   
-   scan2 = new HeapFileScan("dummy.03", status);
-   if (status != OK) error.print(status);
-   status = scan2->startScan(Foffset, sizeof(float), FLOAT,
-  */
     
   //we want to scan the relcat
   HeapFileScan* hfs = new HeapFileScan(RELCATNAME, status);
@@ -85,18 +69,16 @@ const Status RelCatalog::addInfo(RelDesc & record)
   if(status != OK) return status;
 
   //Next, create a record
-  //do we have to do a mem copy here? I dont think so...
-  //added this from the hints in the Piazza post
   Record rec;
   rec.data = &record;
   rec.length = sizeof(RelDesc);
-
+    
   /*
    and then insert it into the relation catalog table using the method insertRecord of InsertFileScan.
   */
   status = ifs->insertRecord(rec, rid);
   if(status != OK) return status;
-
+    
   return status;
 }
 
