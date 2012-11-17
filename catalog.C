@@ -242,8 +242,11 @@ const Status AttrCatalog::removeInfo(const string & relation,
 }
 
 /*
- While getInfo() above returns the description of a single attribute, this method returns (by reference) descriptors for all attributes of the relation via attrs, an array of AttrDesc structures,  and the count of the number of attributes in attrCnt. The attrs array is allocated by this function, but it should be deallocated by the caller.
- */
+ While getInfo() above returns the description of a single attribute,
+ this method returns (by reference) descriptors for all attributes of the relation via attrs,
+ an array of AttrDesc structures,  and the count of the number of attributes in attrCnt.
+ The attrs array is allocated by this function, but it should be deallocated by the caller.
+*/
 const Status AttrCatalog::getRelInfo(const string & relation, 
 				     int &attrCnt,
 				     AttrDesc *&attrs)

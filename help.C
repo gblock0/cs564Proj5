@@ -32,18 +32,29 @@ const Status RelCatalog::help(const string & relation)
   int attrCnt;
 
     /*
-     If relation.empty() is true (empty() is a method on the string class), print (to standard output) a list of all the relations in relcat (including how many attributes it has).
-
+     If relation.empty() is true (empty() is a method on the string class),
+     print (to standard output) a list of all the relations in relcat (including how many attributes it has).
      */
-    
+
     //currently has error, because of the create in DB
     
-  if (relation.empty()) return UT_Print(RELCATNAME);
-    
+   if (relation.empty()) return UT_Print(RELCATNAME); 
     
     /*
     Otherwise, print all the tuples in attrcat that are relevant to relName.
+    **************NEED TO COME BACK FOR INDEXING*************************************
      */
+  if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return status;
+  AttrDesc temp;
+  cout << "Relation Name: " << relation << endl;
+  for(int i = 0; i < attrCnt; i++){
+    temp = attrs[i];
+    cout << "    " << "Attribute Name: " << temp.attrName << endl;
+    cout << "    " << "Attribute Type: " << temp.attrType << endl;
+    cout << "    " << "Attribute Length: " << temp.attrLen << endl;
+    cout << "    " << "Attribute Offset: " << temp.attrOffset << endl;
+  }
+  free(attrs);
 
   return OK;
 }
