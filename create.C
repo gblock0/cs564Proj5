@@ -20,7 +20,7 @@ const Status RelCatalog::createRel(const string & relation,
     //if it does what should we return???
   status = relCat->getInfo(relation, rd);
   if(status == OK) {
-    return status;
+    return RELEXISTS;
   } 
   
   //initializing the RelDesc and adding it to relCat

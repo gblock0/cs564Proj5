@@ -48,7 +48,7 @@ const Status RelCatalog::help(const string & relation)
     Otherwise, print all the tuples in attrcat that are relevant to relName.
     **************NEED TO COME BACK FOR INDEXING*************************************
      */
-  if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return status;
+  if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return RELNOTFOUND;
   AttrDesc temp;
   cout << "Relation Name: " << relation << endl;
   for(int i = 0; i < attrCnt; i++){

@@ -36,7 +36,7 @@ const Status UT_Load(const string & relation, const string & fileName)
   // get relation data
   //set width
   //took from join.C line 386
-  if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return status;
+  if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return RELNOTFOUND;
   for(i = 0; i < attrCnt; i++){
     width += attrs[i].attrLen;
   }

@@ -27,12 +27,10 @@ const Status RelCatalog::destroyRel(const string & relation)
     
     //if the table doesn't exist exit method
     status = attrCat->dropRelation(relation);
-    if(status == FILEEOF){
-      return OK;
-    }else if(status != OK) return status;
+    if(status != OK) return RELNOTFOUND;
 
     status = relCat->removeInfo(relation);
-    if(status != OK) return status;
+    if(status != OK) return RELNOTFOUND;
 
 
 
