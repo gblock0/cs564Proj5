@@ -2,6 +2,7 @@
 #include <functional>
 #include <string.h>
 #include <stdio.h>
+#include <iostream>
 using namespace std;
 
 #include "error.h"
@@ -38,13 +39,19 @@ const Status RelCatalog::help(const string & relation)
 
     //currently has error, because of the create in DB
     
-   if (relation.empty()) return UT_Print(RELCATNAME); 
+    if (relation.empty()){
+        cout<<"no relation given, should print things after this" << endl;
+        return UT_Print(RELCATNAME); 
+    }
+    
+    cout<<"you gave a relation! yay! GOOD FOR YOU BUDDY!" << endl;
     
     /*
     Otherwise, print all the tuples in attrcat that are relevant to relName.
     **************NEED TO COME BACK FOR INDEXING*************************************
      */
   if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return status;
+    
   AttrDesc temp;
   cout << "Relation Name: " << relation << endl;
   for(int i = 0; i < attrCnt; i++){

@@ -20,9 +20,10 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   //we want to scan the relcat
   HeapFileScan* hfs = new HeapFileScan(RELCATNAME, status);
   if(status != OK) return status;
-  
+    
   //search for the string matching relation
-  int offset = (char*)&record.relName - (char*)&record;
+  int offset = ((char*)&record.relName) - ((char*)&record);
+
   status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
   if(status != OK) return status;
 
@@ -36,7 +37,7 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   }
   
   //copy the tuple out of the buffer pool into the return parameter record.
-  memcpy(&record, &rec, sizeof(record));
+  memcpy(&record, rec.data, rec.length);
 
   delete hfs;
     
@@ -62,10 +63,8 @@ const Status RelCatalog::addInfo(RelDesc & record)
   Record rec;
   rec.data = &record;
   rec.length = sizeof(RelDesc);
-    
-  /*
-   and then insert it into the relation catalog table using the method insertRecord of InsertFileScan.
-  */
+
+  //insert it into the relation catalog table    
   status = ifs->insertRecord(rec, rid);
   if(status != OK) return status;
 
@@ -151,6 +150,7 @@ const Status AttrCatalog::getInfo(const string & relation,
     
   //search for the string matching relation
   int offset = (char*)&record.relName - (char*)&record;
+    cout << "offset: " <<offset << endl;
   status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
   if(status != OK) return status;
     
@@ -165,7 +165,7 @@ const Status AttrCatalog::getInfo(const string & relation,
       if(status != OK) return status;
       
       //the record data is actually of type AttrDesc so we can cast it as such
-      memcpy(&record, &rec.data, sizeof(record));
+      memcpy(&record, rec.data, rec.length);
       
       //check to see if the record has a matching attrName too
       if(memcmp(&record.attrName,attrName.c_str(),sizeof(record.attrName))){
@@ -275,17 +275,23 @@ const Status AttrCatalog::getRelInfo(const string & relation,
   //scan until it has reached EOF or found all the attribute descriptions
   //each match add it to the array
   int i = 0;
-  while(((status = hfs->scanNext(rid)) != FILEEOF) || (i < attrCnt) )
+  while(((status = hfs->scanNext(rid)) != FILEEOF))
   {
     if(status != OK) return status;
  
     status = hfs->getRecord(rec);
     if(status != OK) return status;
-    
+      
     //the record data is actually of type AttrDesc so we can cast it as such
-    memcpy(&attrs[i], &rec.data, sizeof(attrs[0]));
+    memcpy(&(attrs[i]), rec.data, rec.length);
+    
     i++;
     
+    //if found all attributes then exit
+    if(i == attrCnt)
+    {
+        break;
+    }
   }
     
   delete hfs;
