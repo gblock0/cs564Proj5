@@ -24,11 +24,16 @@ const Status RelCatalog::destroyRel(const string & relation)
   /*
    First remove all relevant schema information from both the relcat and attrcat relations. 
   */
+    
+    //if the table doesn't exist exit method
+    status = attrCat->dropRelation(relation);
+    if(status == FILEEOF){
+      return OK;
+    }else if(status != OK) return status;
+
     status = relCat->removeInfo(relation);
     if(status != OK) return status;
 
-    status = attrCat->dropRelation(relation);
-    if(status != OK) return status;
 
 
     //I think use dropRelation to take away all the tuples of the relation from attrCat
@@ -90,10 +95,10 @@ const Status AttrCatalog::dropRelation(const string & relation)
   if(status != OK) return status;
 
   for(i = 0; i < attrCnt; i++){
+    status = attrCat->removeInfo(relation, attrs[i].attrName);
+    if(status != OK) return status;
   }
-  
-
-
+  delete attrs;
 
   return status;
 }

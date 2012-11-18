@@ -19,12 +19,15 @@ const Status RelCatalog::createRel(const string & relation,
   //check to see if relation already exisits
     //if it does what should we return???
   status = relCat->getInfo(relation, rd);
-  if(status == OK) return (status = BADCATPARM);
+  if(status == OK) {
+    return status;
+  } 
   
   //initializing the RelDesc and adding it to relCat
   memcpy(rd.relName, relation.c_str(),sizeof(rd.relName));
   rd.attrCnt = attrCnt;
   status = relCat->addInfo(rd);
+  if (status != OK) return status;
   
   offset = 0;
     

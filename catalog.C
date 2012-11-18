@@ -193,7 +193,7 @@ const Status AttrCatalog::addInfo(AttrDesc & record)
     //Next, create a record
     Record rec;
     rec.data = &record;
-    rec.length = sizeof(RelDesc);
+    rec.length = sizeof(AttrDesc);
     
     //insert it into relCat table using the method
     status = ifs->insertRecord(rec, rid);
@@ -269,7 +269,7 @@ const Status AttrCatalog::getRelInfo(const string & relation,
  
   //search for the string matching relation
   int offset = (char*)&attrs[0].relName - (char*)&attrs[0];
-  status = hfs->startScan(offset,sizeof(attrs[0].relName),STRING,relation.c_str(),EQ);
+  status = hfs->startScan(offset, sizeof(attrs[0].relName), STRING, relation.c_str(), EQ);
   if(status != OK) return status;
 
   //scan until it has reached EOF or found all the attribute descriptions
