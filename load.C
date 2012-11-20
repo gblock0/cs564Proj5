@@ -33,19 +33,15 @@ const Status UT_Load(const string & relation, const string & fileName)
     return UNIXERR;
 
 /* ****************************************************** */
-  // get relation data
-  //set width
-  //took from join.C line 386
+  // get relation data and set width
   if((status = attrCat->getRelInfo(relation, attrCnt, attrs)) != OK) return RELNOTFOUND;
   for(i = 0; i < attrCnt; i++){
     width += attrs[i].attrLen;
   }
   free(attrs);
   
-
   //start IFS on relation
   iFile = new InsertFileScan(relation, status);
-
 
 /* ****************************************************** */
   // allocate buffer to hold record read from unix file
@@ -66,9 +62,6 @@ const Status UT_Load(const string & relation, const string & fileName)
 
   // close heap file and unix file
   if (close(fd) < 0) return UNIXERR;
-
-
-
 
 }
 

@@ -25,14 +25,22 @@ const Status RelCatalog::getInfo(const string & relation, RelDesc &record)
   int offset = ((char*)&record.relName) - ((char*)&record);
 
   status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
-  if(status != OK) return status;
+  if(status != OK) 
+  {
+    delete hfs;
+    return status;
+  }
 
   //Scan the record and get the desired tuple. 
   status = hfs->scanNext(rid);
-  if(status != OK) return status;
+    if(status != OK) {
+      delete hfs;
+      return status;
+    }
 
   status = hfs->getRecord(rec);
   if(status != OK){
+    delete hfs;
     return status;
   }
   
@@ -57,7 +65,11 @@ const Status RelCatalog::addInfo(RelDesc & record)
 
   //First, create an InsertFileScan object on the relation catalog table. 
   ifs = new InsertFileScan(RELCATNAME, status);
-  if(status != OK) return status;
+  if(status != OK) 
+  {
+    delete ifs;
+    return status;
+  }
 
   //Next, create a record
   Record rec;
@@ -66,16 +78,17 @@ const Status RelCatalog::addInfo(RelDesc & record)
 
   //insert it into the relation catalog table    
   status = ifs->insertRecord(rec, rid);
-  if(status != OK) return status;
+  if(status != OK) {
+    delete ifs;
+    return status;
+  }
 
   delete ifs;
 
   return status;
 }
 
-/*
- Remove the tuple corresponding to relName from relcat. 
-*/
+//Remove the tuple corresponding to relName from relcat. 
 const Status RelCatalog::removeInfo(const string & relation)
 {
   Status status;
@@ -87,22 +100,32 @@ const Status RelCatalog::removeInfo(const string & relation)
  
   //we want to scan the relcat
   hfs = new HeapFileScan(RELCATNAME, status);
-  if(status != OK) return status;
+  if(status != OK) {
+    delete hfs;
+    return status;
+  }
     
   //search for the string matching relation
   int offset = (char*)&relDesc.relName - (char*)&relDesc;
   status = hfs->startScan(offset,sizeof(relDesc.relName),STRING,relation.c_str(),EQ);
-  if(status != OK) return status;
-
+  if(status != OK) {
+    delete hfs;
+    return status;
+  }
+    
   //find the record
   status = hfs->scanNext(rid);
   if(status != OK){
+    delete hfs;
     return status;
   }
   
   //delete the record
   status = hfs->deleteRecord();
-  if(status != OK) return status;
+  if(status != OK) {
+    delete hfs;
+    return status;
+  }
   
   delete hfs;
     
@@ -137,32 +160,25 @@ const Status AttrCatalog::getInfo(const string & relation,
 
   if (relation.empty() || attrName.empty()) return BADCATPARM;
 
-  /*
-   Uses a scan over the underlying heapfile to get all tuples for relation and check each tuple to find whether
-   it corresponds to attrName. (Or maybe do it the other way around !) This has to be done this way because
-   a predicated HeapFileScan does not allow conjuncted predicates. Note that the tuples in attrcat are of 
-   type AttrDesc (structure given above).
-  */
-
   //we want to scan the attrCat
   hfs = new HeapFileScan(ATTRCATNAME, status);
-  if(status != OK) return status;
+    if(status != OK){ delete hfs; return status;}
     
   //search for the string matching relation
   int offset = (char*)&record.relName - (char*)&record;
     cout << "offset: " <<offset << endl;
   status = hfs->startScan(offset,sizeof(record.relName),STRING,relation.c_str(),EQ);
-  if(status != OK) return status;
+  if(status != OK) { delete hfs; return status;}
     
   //will scan until it finds a match for both relation and attrName
   //or until end of file is reached
   while(true)
   {
       status = hfs->scanNext(rid);
-      if(status != OK) return status;
+      if(status != OK) { delete hfs; return status;}
 
       status = hfs->getRecord(rec);
-      if(status != OK) return status;
+      if(status != OK) { delete hfs; return status;}
       
       //the record data is actually of type AttrDesc so we can cast it as such
       memcpy(&record, rec.data, rec.length);
@@ -179,7 +195,7 @@ const Status AttrCatalog::getInfo(const string & relation,
 
 /*
  Adds a tuple (corresponding to an attribute of a relation) to the attrcat relation.
- */
+*/
 const Status AttrCatalog::addInfo(AttrDesc & record)
 {
     RID rid;
@@ -188,7 +204,7 @@ const Status AttrCatalog::addInfo(AttrDesc & record)
     
     //First, create an InsertFileScan object on the attribute catalog table. 
     ifs = new InsertFileScan(ATTRCATNAME, status);
-    if(status != OK) return status;
+    if(status != OK) { delete ifs; return status;}
     
     //Next, create a record
     Record rec;
@@ -197,7 +213,7 @@ const Status AttrCatalog::addInfo(AttrDesc & record)
     
     //insert it into relCat table using the method
     status = ifs->insertRecord(rec, rid);
-    if(status != OK) return status;
+    if(status != OK) { delete ifs; return status;}
     
     delete ifs;
     
@@ -219,20 +235,20 @@ const Status AttrCatalog::removeInfo(const string & relation,
     
     //we want to scan the attr cat
     hfs = new HeapFileScan(ATTRCATNAME, status);
-    if(status != OK) return status;
+    if(status != OK) { delete hfs; return status;}
     
     //search for the string matching relation
     int offset = (char*)&attrDesc.relName - (char*)&attrDesc;
     status = hfs->startScan(offset,sizeof(attrDesc.relName),STRING,relation.c_str(),EQ);
-    if(status != OK) return status;
+    if(status != OK){ delete hfs; return status;}
     
     //find the record
     status = hfs->scanNext(rid);
-    if(status != OK) return status;
+    if(status != OK) { delete hfs; return status;}
     
     //delete the record
     status = hfs->deleteRecord();
-    if(status != OK) return status;
+    if(status != OK) { delete hfs; return status;}
     
     delete hfs;
     
@@ -265,7 +281,7 @@ const Status AttrCatalog::getRelInfo(const string & relation,
     
   //we want to scan the attrCat
   hfs = new HeapFileScan(ATTRCATNAME, status);
-  if(status != OK) return status;
+  if(status != OK) {delete hfs; return status;}
  
   //search for the string matching relation
   int offset = (char*)&attrs[0].relName - (char*)&attrs[0];
@@ -277,10 +293,10 @@ const Status AttrCatalog::getRelInfo(const string & relation,
   int i = 0;
   while(((status = hfs->scanNext(rid)) != FILEEOF))
   {
-    if(status != OK) return status;
+    if(status != OK) {delete hfs; return status;}
  
     status = hfs->getRecord(rec);
-    if(status != OK) return status;
+    if(status != OK) {delete hfs; return status;}
       
     //the record data is actually of type AttrDesc so we can cast it as such
     memcpy(&(attrs[i]), rec.data, rec.length);

@@ -17,7 +17,6 @@ const Status RelCatalog::createRel(const string & relation,
     return NAMETOOLONG;
     
   //check to see if relation already exisits
-    //if it does what should we return???
   status = relCat->getInfo(relation, rd);
   if(status == OK) {
     return RELEXISTS;
@@ -31,7 +30,7 @@ const Status RelCatalog::createRel(const string & relation,
   
   offset = 0;
     
-  //for all in array copy the attr data into the AttrDesc struct, and add to attrCat
+  //copy the attr data into the AttrDesc struct, and add to attrCat
   for(int i = 0; i < attrCnt; i++){
       strcpy(ad.relName, attrList[i].relName);
       strcpy(ad.attrName, attrList[i].attrName);
